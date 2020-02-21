@@ -6,15 +6,13 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
+type MysqlRepository struct {
+	DbName,Ip,Port,User,Pw string  //数据库名,ip地址,端口号,用户名,密码
+}
 
 //数据库连接
-//@param dbName 数据库名
-//@param ip ip地址
-//@param port 端口号
-//@param user 用户名
-//@param pw 密码
-func Connect(dbName string,ip string,port string,user string,pw string) *sql.DB {
-	db, err := sql.Open("mysql", user+":"+pw+"@tcp("+ip+":"+port+")/"+dbName+"?charset=utf8")
+func (r *MysqlRepository) Connect() *sql.DB {
+	db, err := sql.Open("mysql", r.User+":"+r.Pw+"@tcp("+r.Ip+":"+r.Port+")/"+r.DbName+"?charset=utf8")
 	if err != nil {
 		panic(err)
 	}
@@ -22,10 +20,9 @@ func Connect(dbName string,ip string,port string,user string,pw string) *sql.DB 
 }
 
 //查询数据
-func Query(){
-	db := Connect("","","","","")
+func (r *MysqlRepository) Query() {
+	db := r.Connect()
 	rows, err := db.Query("SELECT * FROM x")
-	//rows, err := db
 	if err != nil {
 		panic(err)
 	}
@@ -35,8 +32,12 @@ func Query(){
 	for i := range values {
 		scanArgs[i] = &values[i]
 	}
-	//var res []interface{}
+	//res := make([]map[int]string,rows)
+	//index := 0
+	//var myNum []interface{}
+	//fmt.Println(rows.)
 	for rows.Next() {
+		fmt.Println(1)
 		err = rows.Scan(scanArgs...)
 		record := make(map[string]string)
 		for i, col := range values {
@@ -44,7 +45,14 @@ func Query(){
 				record[columns[i]] = string(col.([]byte))
 			}
 		}
-		fmt.Println(record["Id"])
+		//for k,col := range record{
+		//	res[index][k]
+		//	fmt.Println(k)
+		//	fmt.Println(col)
+		//}
+		//res[1] = "aaa"
+		//index++
+		//fmt.Println(myNum)
 	}
 }
 
