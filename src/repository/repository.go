@@ -2,7 +2,6 @@ package repository
 
 import (
 	"database/sql"
-	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -19,8 +18,12 @@ func (r *MysqlRepository) Connect() *sql.DB {
 	return db
 }
 
+type Data struct {
+	Record map[string]string
+}
+
 //查询数据
-func (r *MysqlRepository) Query() {
+func (r *MysqlRepository) Query() []Data {
 	db := r.Connect()
 	rows, err := db.Query("SELECT * FROM x")
 	if err != nil {
@@ -32,12 +35,9 @@ func (r *MysqlRepository) Query() {
 	for i := range values {
 		scanArgs[i] = &values[i]
 	}
-	//res := make([]map[int]string,rows)
-	//index := 0
-	//var myNum []interface{}
-	//fmt.Println(rows.)
+	var data []Data
 	for rows.Next() {
-		fmt.Println(1)
+		var d Data
 		err = rows.Scan(scanArgs...)
 		record := make(map[string]string)
 		for i, col := range values {
@@ -45,108 +45,62 @@ func (r *MysqlRepository) Query() {
 				record[columns[i]] = string(col.([]byte))
 			}
 		}
-		//for k,col := range record{
-		//	res[index][k]
-		//	fmt.Println(k)
-		//	fmt.Println(col)
-		//}
-		//res[1] = "aaa"
-		//index++
-		//fmt.Println(myNum)
+		d.Record = record
+		data = append(data,d)
+	}
+	return data
+}
+
+//清空表
+func (r *MysqlRepository) Empty(){
+	db := r.Connect()
+	_,err := db.Query("truncate table x")
+	if err != nil{
+		panic(err)
 	}
 }
 
-////插入demo
-//func insert() {
-//
-//	checkErr(err)
-//
-//	stmt, err := db.Prepare(`INSERT user (user_name,user_age,user_sex) values (?,?,?)`)
-//	checkErr(err)
-//	res, err := stmt.Exec("tony", 20, 1)
-//	checkErr(err)
-//	id, err := res.LastInsertId()
-//	checkErr(err)
-//	fmt.Println(id)
-//}
-//
-////查询demo
-//func query() {
-//	db, err := sql.Open("mysql", "root:@/test?charset=utf8")
-//	checkErr(err)
-//
-//	rows, err := db.Query("SELECT * FROM user")
-//	checkErr(err)
-//
-//	//普通demo
-//	//for rows.Next() {
-//	//	var userId int
-//	//	var userName string
-//	//	var userAge int
-//	//	var userSex int
-//
-//	//	rows.Columns()
-//	//	err = rows.Scan(&userId, &userName, &userAge, &userSex)
-//	//	checkErr(err)
-//
-//	//	fmt.Println(userId)
-//	//	fmt.Println(userName)
-//	//	fmt.Println(userAge)
-//	//	fmt.Println(userSex)
-//	//}
-//
-//	//字典类型
-//	//构造scanArgs、values两个数组，scanArgs的每个值指向values相应值的地址
-//	columns, _ := rows.Columns()
-//	scanArgs := make([]interface{}, len(columns))
-//	values := make([]interface{}, len(columns))
-//	for i := range values {
-//		scanArgs[i] = &values[i]
-//	}
-//
-//	for rows.Next() {
-//		//将行数据保存到record字典
-//		err = rows.Scan(scanArgs...)
-//		record := make(map[string]string)
-//		for i, col := range values {
-//			if col != nil {
-//				record[columns[i]] = string(col.([]byte))
-//			}
-//		}
-//		fmt.Println(record)
-//	}
-//}
-//
-////更新数据
-//func update() {
-//	db, err := sql.Open("mysql", "root:@/test?charset=utf8")
-//	checkErr(err)
-//
-//	stmt, err := db.Prepare(`UPDATE user SET user_age=?,user_sex=? WHERE user_id=?`)
-//	checkErr(err)
-//	res, err := stmt.Exec(21, 2, 1)
-//	checkErr(err)
-//	num, err := res.RowsAffected()
-//	checkErr(err)
-//	fmt.Println(num)
-//}
-//
-////删除数据
-//func remove() {
-//	db, err := sql.Open("mysql", "root:@/test?charset=utf8")
-//	checkErr(err)
-//
-//	stmt, err := db.Prepare(`DELETE FROM user WHERE user_id=?`)
-//	checkErr(err)
-//	res, err := stmt.Exec(1)
-//	checkErr(err)
-//	num, err := res.RowsAffected()
-//	checkErr(err)
-//	fmt.Println(num)
-//}
-//
-//func checkErr(err error) {
-//	if err != nil {
-//		panic(err)
-//	}
-//}
+//插入数据
+//@param tab 表名
+//@param data 要插入的数据集合
+func (r *MysqlRepository) Insert(tab string,data []Data){
+	//for _,col := range data {
+	//	sqlKey := "("
+	//	sqlValue := "("
+	//	//sql := "INSERT "+tab    //Id,name) values (?,?)
+	//	for k,col1 := range col.Record {
+	//		sqlKey += k
+	//		sqlValue += "?"
+	//		//fmt.Println(k)
+	//		//fmt.Println(col1)
+	//	}
+	//	db := r.Connect()
+	//	stmt, err := db.Prepare(sql)
+	//	_,err = stmt.Exec(1, "La")
+	//	if err != nil{
+	//		panic(err)
+	//	}
+	//}
+
+
+	db := r.Connect()
+	stmt, err := db.Prepare(`INSERT x (Id,name) values (?,?)`)
+		var ddd []interface{}
+		ddd = append(ddd,1)
+		ddd = append(ddd,"La")
+	_,err = stmt.Exec(ddd)
+	if err != nil{
+		panic(err)
+	}
+	stmt.Close()
+
+
+
+	//fmt.Println(ddd)
+
+	//db := r.Connect()
+	//stmt, err := db.Prepare(`INSERT x (Id,name) values (?,?)`)
+	//if err != nil{
+	//	panic(err)
+	//}
+}
