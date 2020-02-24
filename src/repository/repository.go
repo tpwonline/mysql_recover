@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	_ "github.com/go-sql-driver/mysql"
+	"strings"
 )
 
 type MysqlRepository struct {
@@ -23,9 +24,11 @@ type Data struct {
 }
 
 //查询数据
-func (r *MysqlRepository) Query() []Data {
+//@param tab 表名
+func (r *MysqlRepository) Query(tab string) []Data {
 	db := r.Connect()
-	rows, err := db.Query("SELECT * FROM x")
+	sql := "SELECT * FROM "+tab
+	rows, err := db.Query(sql)
 	if err != nil {
 		panic(err)
 	}
@@ -52,9 +55,10 @@ func (r *MysqlRepository) Query() []Data {
 }
 
 //清空表
-func (r *MysqlRepository) Empty(){
+//@param tab 表名
+func (r *MysqlRepository) Empty(tab string){
 	db := r.Connect()
-	_,err := db.Query("truncate table x")
+	_,err := db.Query("truncate table "+tab)
 	if err != nil{
 		panic(err)
 	}
@@ -64,43 +68,27 @@ func (r *MysqlRepository) Empty(){
 //@param tab 表名
 //@param data 要插入的数据集合
 func (r *MysqlRepository) Insert(tab string,data []Data){
-	//for _,col := range data {
-	//	sqlKey := "("
-	//	sqlValue := "("
-	//	//sql := "INSERT "+tab    //Id,name) values (?,?)
-	//	for k,col1 := range col.Record {
-	//		sqlKey += k
-	//		sqlValue += "?"
-	//		//fmt.Println(k)
-	//		//fmt.Println(col1)
-	//	}
-	//	db := r.Connect()
-	//	stmt, err := db.Prepare(sql)
-	//	_,err = stmt.Exec(1, "La")
-	//	if err != nil{
-	//		panic(err)
-	//	}
-	//}
-
-
 	db := r.Connect()
-	stmt, err := db.Prepare(`INSERT x (Id,name) values (?,?)`)
-		var ddd []interface{}
-		ddd = append(ddd,1)
-		ddd = append(ddd,"La")
-	_,err = stmt.Exec(ddd)
-	if err != nil{
-		panic(err)
+	for _,col := range data {
+		sqlKey := "("
+		sqlValue := "("
+		sql := "INSERT "+tab+" "
+		var insertVal []interface{}
+		for k,col1 := range col.Record {
+			sqlKey += k+","
+			sqlValue += "?,"
+			insertVal = append(insertVal,col1)
+		}
+		sqlKey = strings.TrimRight(sqlKey, ",")
+		sqlValue = strings.TrimRight(sqlValue, ",")
+		sqlKey += ")"
+		sqlValue += ")"
+		newSql := sql+sqlKey+" values "+sqlValue
+		//入库
+		stmt, err := db.Prepare(newSql)
+		_,err = stmt.Exec(insertVal...)
+		if err != nil{
+			panic(err)
+		}
 	}
-	stmt.Close()
-
-
-
-	//fmt.Println(ddd)
-
-	//db := r.Connect()
-	//stmt, err := db.Prepare(`INSERT x (Id,name) values (?,?)`)
-	//if err != nil{
-	//	panic(err)
-	//}
 }
